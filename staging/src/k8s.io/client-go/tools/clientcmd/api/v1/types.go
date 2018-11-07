@@ -64,6 +64,9 @@ type Cluster struct {
 	// InsecureSkipTLSVerify skips the validity check for the server's certificate. This will make your HTTPS connections insecure.
 	// +optional
 	InsecureSkipTLSVerify bool `json:"insecure-skip-tls-verify,omitempty"`
+	// UnixSocket is the path to a unix socket to use for the connection
+	// +optional
+	UnixSocket string `json:"unix-socket,omitempty"`
 	// CertificateAuthority is the path to a cert file for the certificate authority.
 	// +optional
 	CertificateAuthority string `json:"certificate-authority,omitempty"`

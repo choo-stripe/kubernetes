@@ -17,9 +17,11 @@ limitations under the License.
 package clientcmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/url"
 	"os"
 	"strings"
@@ -150,6 +152,12 @@ func (config *DirectClientConfig) ClientConfig() (*restclient.Config, error) {
 
 	clientConfig := &restclient.Config{}
 	clientConfig.Host = configClusterInfo.Server
+
+	if configClusterInfo.UnixSocket != "" {
+		clientConfig.Dial = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return net.Dial("unix", configClusterInfo.UnixSocket)
+		}
+	}
 
 	if len(config.overrides.Timeout) > 0 {
 		timeout, err := ParseTimeout(config.overrides.Timeout)
@@ -503,6 +511,11 @@ func (config *inClusterClientConfig) ClientConfig() (*restclient.Config, error) 
 		}
 		if certificateAuthorityFile := config.overrides.ClusterInfo.CertificateAuthority; len(certificateAuthorityFile) > 0 {
 			icc.TLSClientConfig.CAFile = certificateAuthorityFile
+		}
+		if unixSocket := config.overrides.ClusterInfo.UnixSocket; len(unixSocket) > 0 {
+			icc.Dial = func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return net.Dial("unix", unixSocket)
+			}
 		}
 	}
 

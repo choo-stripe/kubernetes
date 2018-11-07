@@ -51,6 +51,10 @@ func Example_ofOptionsConfig() {
 		Server:                "https://bravo.org:8080",
 		InsecureSkipTLSVerify: false,
 	}
+	defaultConfig.Clusters["charlie"] = &Cluster{
+		Server:     "https://charlie.org:8080",
+		UnixSocket: "/tmp/sock",
+	}
 	defaultConfig.AuthInfos["white-mage-via-cert"] = &AuthInfo{
 		ClientCertificate: "path/to/my/client-cert-filename",
 		ClientKey:         "path/to/my/client-key-filename",
@@ -81,6 +85,10 @@ func Example_ofOptionsConfig() {
 		Cluster:  "alfa",
 		AuthInfo: "white-mage-via-cert",
 	}
+	defaultConfig.Contexts["charlie-as-white-mage"] = &Context{
+		Cluster:  "charlie",
+		AuthInfo: "white-mage-via-cert",
+	}
 	defaultConfig.CurrentContext = "alfa-as-white-mage"
 
 	output, err := yaml.Marshal(defaultConfig)
@@ -99,6 +107,10 @@ func Example_ofOptionsConfig() {
 	//   bravo:
 	//     LocationOfOrigin: ""
 	//     server: https://bravo.org:8080
+	//   charlie:
+	//     LocationOfOrigin: ""
+	//     server: https://charlie.org:8080
+	//     unix-socket: /tmp/sock
 	// contexts:
 	//   alfa-as-black-mage:
 	//     LocationOfOrigin: ""
@@ -114,6 +126,10 @@ func Example_ofOptionsConfig() {
 	//     cluster: bravo
 	//     namespace: yankee
 	//     user: black-mage-via-auth-provider
+	//   charlie-as-white-mage:
+	//     LocationOfOrigin: ""
+	//     cluster: charlie
+	//     user: white-mage-via-cert
 	// current-context: alfa-as-white-mage
 	// preferences:
 	//   colors: true

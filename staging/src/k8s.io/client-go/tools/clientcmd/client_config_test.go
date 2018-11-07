@@ -157,6 +157,25 @@ func TestInsecureOverridesCA(t *testing.T) {
 	matchByteArg(nil, actualCfg.TLSClientConfig.CAData, t)
 }
 
+func TestUnixSocket(t *testing.T) {
+	config := createValidTestConfig()
+	clientBuilder := NewNonInteractiveClientConfig(*config, "clean", &ConfigOverrides{
+		ClusterInfo: clientcmdapi.Cluster{
+			UnixSocket: "/tmp/sock",
+		},
+	}, nil)
+
+	actualCfg, err := clientBuilder.ClientConfig()
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	// just make sure the dial method is set
+	if actualCfg.Dial == nil {
+		t.Error("Dial should not be empty when unix socket is set")
+	}
+}
+
 func TestMergeContext(t *testing.T) {
 	const namespace = "overridden-namespace"
 
@@ -562,6 +581,13 @@ func TestInClusterClientConfigPrecedence(t *testing.T) {
 			},
 		},
 		{
+			overrides: &ConfigOverrides{
+				ClusterInfo: clientcmdapi.Cluster{
+					UnixSocket: "/tmp/sock",
+				},
+			},
+		},
+		{
 			overrides: &ConfigOverrides{},
 		},
 	}
@@ -570,6 +596,7 @@ func TestInClusterClientConfigPrecedence(t *testing.T) {
 		expectedServer := "https://host-from-cluster.com"
 		expectedToken := "token-from-cluster"
 		expectedCAFile := "/path/to/ca-from-cluster.crt"
+		expectedDialToBeNil := true
 
 		icc := &inClusterClientConfig{
 			inClusterConfigProvider: func() (*restclient.Config, error) {
@@ -598,6 +625,9 @@ func TestInClusterClientConfigPrecedence(t *testing.T) {
 		if overridenCAFile := tc.overrides.ClusterInfo.CertificateAuthority; len(overridenCAFile) > 0 {
 			expectedCAFile = overridenCAFile
 		}
+		if overridenUnixSocket := tc.overrides.ClusterInfo.UnixSocket; len(overridenUnixSocket) > 0 {
+			expectedDialToBeNil = false
+		}
 
 		if clientConfig.Host != expectedServer {
 			t.Errorf("Expected server %v, got %v", expectedServer, clientConfig.Host)
@@ -607,6 +637,9 @@ func TestInClusterClientConfigPrecedence(t *testing.T) {
 		}
 		if clientConfig.TLSClientConfig.CAFile != expectedCAFile {
 			t.Errorf("Expected Certificate Authority %v, got %v", expectedCAFile, clientConfig.TLSClientConfig.CAFile)
+		}
+		if (clientConfig.Dial == nil) != expectedDialToBeNil {
+			t.Errorf("Expected dial to be nil: %v, got %v", expectedDialToBeNil, clientConfig.Dial == nil)
 		}
 	}
 }

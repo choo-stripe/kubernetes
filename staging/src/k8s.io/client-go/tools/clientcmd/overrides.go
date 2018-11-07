@@ -65,12 +65,13 @@ type ContextOverrideFlags struct {
 	Namespace    FlagInfo
 }
 
-// ClusterOverride holds the flag names to be used for binding command line flags for Cluster objects
+// ClusterOverrideFlags holds the flag names to be used for binding command line flags for Cluster objects
 type ClusterOverrideFlags struct {
 	APIServer             FlagInfo
 	APIVersion            FlagInfo
 	CertificateAuthority  FlagInfo
 	InsecureSkipTLSVerify FlagInfo
+	UnixSocket            FlagInfo
 }
 
 // FlagInfo contains information about how to register a flag.  This struct is useful if you want to provide a way for an extender to
@@ -111,7 +112,7 @@ func (f FlagInfo) BindTransformingStringFlag(flags *pflag.FlagSet, target *strin
 	return f
 }
 
-// BindStringSliceFlag binds the flag based on the provided info.  If LongName == "", nothing is registered
+// BindStringArrayFlag binds the flag based on the provided info.  If LongName == "", nothing is registered
 func (f FlagInfo) BindStringArrayFlag(flags *pflag.FlagSet, target *[]string) FlagInfo {
 	// you can't register a flag without a long name
 	if len(f.LongName) > 0 {
@@ -146,6 +147,7 @@ const (
 	FlagNamespace        = "namespace"
 	FlagAPIServer        = "server"
 	FlagInsecure         = "insecure-skip-tls-verify"
+	FlagUnixSocket       = "unix-socket"
 	FlagCertFile         = "client-certificate"
 	FlagKeyFile          = "client-key"
 	FlagCAFile           = "certificate-authority"
@@ -189,6 +191,7 @@ func RecommendedClusterOverrideFlags(prefix string) ClusterOverrideFlags {
 		APIServer:             FlagInfo{prefix + FlagAPIServer, "", "", "The address and port of the Kubernetes API server"},
 		CertificateAuthority:  FlagInfo{prefix + FlagCAFile, "", "", "Path to a cert file for the certificate authority"},
 		InsecureSkipTLSVerify: FlagInfo{prefix + FlagInsecure, "", "false", "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure"},
+		UnixSocket:            FlagInfo{prefix + FlagUnixSocket, "", "", "Path to a unix socket to use for the connection"},
 	}
 }
 
@@ -226,9 +229,10 @@ func BindClusterFlags(clusterInfo *clientcmdapi.Cluster, flags *pflag.FlagSet, f
 	flagNames.APIServer.BindStringFlag(flags, &clusterInfo.Server)
 	flagNames.CertificateAuthority.BindStringFlag(flags, &clusterInfo.CertificateAuthority)
 	flagNames.InsecureSkipTLSVerify.BindBoolFlag(flags, &clusterInfo.InsecureSkipTLSVerify)
+	flagNames.UnixSocket.BindStringFlag(flags, &clusterInfo.UnixSocket)
 }
 
-// BindFlags is a convenience method to bind the specified flags to their associated variables
+// BindContextFlags is a convenience method to bind the specified flags to their associated variables
 func BindContextFlags(contextInfo *clientcmdapi.Context, flags *pflag.FlagSet, flagNames ContextOverrideFlags) {
 	flagNames.ClusterName.BindStringFlag(flags, &contextInfo.Cluster)
 	flagNames.AuthInfoName.BindStringFlag(flags, &contextInfo.AuthInfo)

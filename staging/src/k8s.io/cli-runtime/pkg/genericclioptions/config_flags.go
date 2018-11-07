@@ -40,6 +40,7 @@ const (
 	flagNamespace        = "namespace"
 	flagAPIServer        = "server"
 	flagInsecure         = "insecure-skip-tls-verify"
+	flagUnixSocket       = "unix-socket"
 	flagCertFile         = "client-certificate"
 	flagKeyFile          = "client-key"
 	flagCAFile           = "certificate-authority"
@@ -83,6 +84,7 @@ type ConfigFlags struct {
 	Namespace        *string
 	APIServer        *string
 	Insecure         *bool
+	UnixSocket       *string
 	CertFile         *string
 	KeyFile          *string
 	CAFile           *string
@@ -149,6 +151,9 @@ func (f *ConfigFlags) ToRawKubeConfigLoader() clientcmd.ClientConfig {
 	}
 	if f.Insecure != nil {
 		overrides.ClusterInfo.InsecureSkipTLSVerify = *f.Insecure
+	}
+	if f.UnixSocket != nil {
+		overrides.ClusterInfo.UnixSocket = *f.UnixSocket
 	}
 
 	// bind context flags
@@ -268,6 +273,9 @@ func (f *ConfigFlags) AddFlags(flags *pflag.FlagSet) {
 	if f.Insecure != nil {
 		flags.BoolVar(f.Insecure, flagInsecure, *f.Insecure, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 	}
+	if f.UnixSocket != nil {
+		flags.StringVar(f.UnixSocket, flagUnixSocket, *f.UnixSocket, "Path to a unix socket to use for the connection")
+	}
 	if f.CAFile != nil {
 		flags.StringVar(f.CAFile, flagCAFile, *f.CAFile, "Path to a cert file for the certificate authority")
 	}
@@ -291,6 +299,7 @@ func NewConfigFlags() *ConfigFlags {
 
 	return &ConfigFlags{
 		Insecure:   &insecure,
+		UnixSocket: stringptr(""),
 		Timeout:    stringptr("0"),
 		KubeConfig: stringptr(""),
 
