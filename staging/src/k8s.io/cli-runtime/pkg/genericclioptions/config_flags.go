@@ -40,7 +40,7 @@ const (
 	flagNamespace        = "namespace"
 	flagAPIServer        = "server"
 	flagInsecure         = "insecure-skip-tls-verify"
-	flagUnixSocket       = "unix-socket"
+	flagUnixSocket       = "via-unix-socket"
 	flagCertFile         = "client-certificate"
 	flagKeyFile          = "client-key"
 	flagCAFile           = "certificate-authority"
