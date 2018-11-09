@@ -147,7 +147,7 @@ const (
 	FlagNamespace        = "namespace"
 	FlagAPIServer        = "server"
 	FlagInsecure         = "insecure-skip-tls-verify"
-	FlagUnixSocket       = "unix-socket"
+	FlagUnixSocket       = "via-unix-socket"
 	FlagCertFile         = "client-certificate"
 	FlagKeyFile          = "client-key"
 	FlagCAFile           = "certificate-authority"

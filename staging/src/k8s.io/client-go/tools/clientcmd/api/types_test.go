@@ -110,7 +110,7 @@ func Example_ofOptionsConfig() {
 	//   charlie:
 	//     LocationOfOrigin: ""
 	//     server: https://charlie.org:8080
-	//     unix-socket: /tmp/sock
+	//     via-unix-socket: /tmp/sock
 	// contexts:
 	//   alfa-as-black-mage:
 	//     LocationOfOrigin: ""

@@ -70,7 +70,7 @@ type Cluster struct {
 	InsecureSkipTLSVerify bool `json:"insecure-skip-tls-verify,omitempty"`
 	// UnixSocket is the path to a unix socket to use for the connection
 	// +optional
-	UnixSocket string `json:"unix-socket,omitempty"`
+	UnixSocket string `json:"via-unix-socket,omitempty"`
 	// CertificateAuthority is the path to a cert file for the certificate authority.
 	// +optional
 	CertificateAuthority string `json:"certificate-authority,omitempty"`
