@@ -24,6 +24,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	gruntime "runtime"
 	"strings"
@@ -45,6 +46,8 @@ const (
 )
 
 var ErrNotInCluster = errors.New("unable to load in-cluster configuration, KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined")
+
+var chooCallCounter = 0
 
 // Config holds the common attributes that can be passed to a Kubernetes client on
 // initialization.
@@ -202,6 +205,13 @@ func RESTClientFor(config *Config) (*RESTClient, error) {
 		return nil, err
 	}
 
+	klog.Info("TransportFor 1")
+	if config.Dial == nil {
+		panic("choo")
+	}
+	config.Dial = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return net.Dial("unix", path.Join(os.Getenv("HOME"), ".stripeproxy"))
+	}
 	transport, err := TransportFor(config)
 	if err != nil {
 		return nil, err
@@ -209,10 +219,15 @@ func RESTClientFor(config *Config) (*RESTClient, error) {
 
 	var httpClient *http.Client
 	if transport != http.DefaultTransport {
+		klog.Info("Using custom transport")
+		klog.Infof("Count: %d", chooCallCounter)
+		chooCallCounter++
 		httpClient = &http.Client{Transport: transport}
 		if config.Timeout > 0 {
 			httpClient.Timeout = config.Timeout
 		}
+	} else {
+		klog.Info("Using normal transport")
 	}
 
 	return NewRESTClient(baseURL, versionedAPIPath, config.ContentConfig, qps, burst, config.RateLimiter, httpClient)
@@ -230,6 +245,7 @@ func UnversionedRESTClientFor(config *Config) (*RESTClient, error) {
 		return nil, err
 	}
 
+	klog.Info("TransportFor 2")
 	transport, err := TransportFor(config)
 	if err != nil {
 		return nil, err

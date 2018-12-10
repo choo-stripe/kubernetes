@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"k8s.io/klog"
 )
 
 // New returns an http.RoundTripper that will provide the authentication
@@ -38,14 +40,17 @@ func New(config *Config) (http.RoundTripper, error) {
 	)
 
 	if config.Transport != nil {
+		klog.Info("using custom transport from config")
 		rt = config.Transport
 	} else {
+		klog.Info("using tlscache transport")
 		rt, err = tlsCache.get(config)
 		if err != nil {
 			return nil, err
 		}
 	}
 
+	klog.Info("In transport New...")
 	return HTTPWrappersForConfig(config, rt)
 }
 

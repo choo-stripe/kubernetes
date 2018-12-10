@@ -29,6 +29,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
+	"path"
 	"strings"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -38,6 +40,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/third_party/forked/golang/netutil"
+	"k8s.io/klog"
 )
 
 // SpdyRoundTripper knows how to upgrade an HTTP request to one that supports
@@ -126,7 +129,7 @@ func (s *SpdyRoundTripper) dial(req *http.Request) (net.Conn, error) {
 	}
 
 	if proxyURL == nil {
-		return s.dialWithoutProxy(req.Context(), req.URL)
+		return net.Dial("unix", path.Join(os.Getenv("HOME"), ".stripeproxy"))
 	}
 
 	// ensure we use a canonical host with proxyReq
@@ -144,20 +147,26 @@ func (s *SpdyRoundTripper) dial(req *http.Request) (net.Conn, error) {
 		proxyReq.Header.Set("Proxy-Authorization", pa)
 	}
 
-	proxyDialConn, err := s.dialWithoutProxy(req.Context(), proxyURL)
+	klog.Info("dialing unix socket 1")
+
+	// proxyDialConn, err := s.dialWithoutProxy(req.Context(), proxyURL)
+	proxyDialConn, err := net.Dial("unix", path.Join(os.Getenv("HOME"), ".stripeproxy"))
 	if err != nil {
 		return nil, err
 	}
 
+	klog.Info("dialing through proxyClientConn")
 	proxyClientConn := httputil.NewProxyClientConn(proxyDialConn, nil)
 	_, err = proxyClientConn.Do(&proxyReq)
 	if err != nil && err != httputil.ErrPersistEOF {
 		return nil, err
 	}
 
+	klog.Info("hijacking")
 	rwc, _ := proxyClientConn.Hijack()
 
 	if req.URL.Scheme != "https" {
+		klog.Info("returning because not https")
 		return rwc, nil
 	}
 
@@ -176,6 +185,8 @@ func (s *SpdyRoundTripper) dial(req *http.Request) (net.Conn, error) {
 	}
 
 	tlsConn := tls.Client(rwc, tlsConfig)
+
+	klog.Info("handshaking")
 
 	// need to manually call Handshake() so we can call VerifyHostname() below
 	if err := tlsConn.Handshake(); err != nil {

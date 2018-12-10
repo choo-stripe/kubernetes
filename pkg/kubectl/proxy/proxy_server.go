@@ -194,6 +194,7 @@ func NewServer(filebase string, apiProxyPrefix string, staticPrefix string, filt
 	}
 
 	responder := &responder{}
+	klog.Info("TransportFor 3")
 	transport, err := rest.TransportFor(cfg)
 	if err != nil {
 		return nil, err

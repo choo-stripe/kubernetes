@@ -33,10 +33,13 @@ import (
 // HTTP2 clients). Pure HTTP clients should use the RoundTripper returned from
 // New.
 func HTTPWrappersForConfig(config *Config, rt http.RoundTripper) (http.RoundTripper, error) {
+	klog.Info("in transport HTTPWrappersForConfig")
 	if config.WrapTransport != nil {
+		klog.Info("wrapping transport")
 		rt = config.WrapTransport(rt)
 	}
 
+	klog.Info("Creating rt using debug wrappers")
 	rt = DebugWrappers(rt)
 
 	// Set authentication wrappers
@@ -61,17 +64,23 @@ func HTTPWrappersForConfig(config *Config, rt http.RoundTripper) (http.RoundTrip
 
 // DebugWrappers wraps a round tripper and logs based on the current log level.
 func DebugWrappers(rt http.RoundTripper) http.RoundTripper {
+	klog.Info("In debug wrappers")
 	switch {
 	case bool(klog.V(9)):
+		klog.Info("using v9")
 		rt = newDebuggingRoundTripper(rt, debugCurlCommand, debugURLTiming, debugResponseHeaders)
 	case bool(klog.V(8)):
+		klog.Info("using v8")
 		rt = newDebuggingRoundTripper(rt, debugJustURL, debugRequestHeaders, debugResponseStatus, debugResponseHeaders)
 	case bool(klog.V(7)):
+		klog.Info("using v7")
 		rt = newDebuggingRoundTripper(rt, debugJustURL, debugRequestHeaders, debugResponseStatus)
 	case bool(klog.V(6)):
+		klog.Info("using v6")
 		rt = newDebuggingRoundTripper(rt, debugURLTiming)
 	}
 
+	klog.Info("returning")
 	return rt
 }
 
@@ -358,6 +367,7 @@ const (
 )
 
 func newDebuggingRoundTripper(rt http.RoundTripper, levels ...debugLevel) *debuggingRoundTripper {
+	klog.Info("Creating new debugging round tripper")
 	drt := &debuggingRoundTripper{
 		delegatedRoundTripper: rt,
 		levels:                make(map[debugLevel]bool, len(levels)),
@@ -396,6 +406,7 @@ func (rt *debuggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, e
 	}
 
 	startTime := time.Now()
+	klog.Infof("Delegated round tripper: %+v", rt.delegatedRoundTripper)
 	response, err := rt.delegatedRoundTripper.RoundTrip(req)
 	reqInfo.Duration = time.Since(startTime)
 
