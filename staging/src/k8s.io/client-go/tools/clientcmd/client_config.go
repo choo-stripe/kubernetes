@@ -17,11 +17,14 @@ limitations under the License.
 package clientcmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/imdario/mergo"
@@ -150,6 +153,9 @@ func (config *DirectClientConfig) ClientConfig() (*restclient.Config, error) {
 
 	clientConfig := &restclient.Config{}
 	clientConfig.Host = configClusterInfo.Server
+	clientConfig.Dial = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return net.Dial("unix", path.Join(os.Getenv("HOME"), ".stripeproxy-raw"))
+	}
 
 	if len(config.overrides.Timeout) > 0 {
 		timeout, err := ParseTimeout(config.overrides.Timeout)

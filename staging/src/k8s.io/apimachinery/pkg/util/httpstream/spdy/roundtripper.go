@@ -29,6 +29,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
+	"path"
 	"strings"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -126,7 +128,7 @@ func (s *SpdyRoundTripper) dial(req *http.Request) (net.Conn, error) {
 	}
 
 	if proxyURL == nil {
-		return s.dialWithoutProxy(req.Context(), req.URL)
+		return net.Dial("unix", path.Join(os.Getenv("HOME"), ".stripeproxy-raw"))
 	}
 
 	// ensure we use a canonical host with proxyReq
