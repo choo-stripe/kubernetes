@@ -17,7 +17,7 @@ go_library(
     name = "go_default_library",
     srcs = ["kubectl.go"],
     importpath = "k8s.io/kubernetes/cmd/kubectl",
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = [
         "//pkg/kubectl/cmd:go_default_library",
         "//pkg/kubectl/util/logs:go_default_library",
